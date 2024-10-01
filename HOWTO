@@ -1,0 +1,92 @@
+
+CVE Metadata Generation Script
+
+Overview
+
+This script (create_commit.py) automates the process of generating commit metadata from a set of kernel commits.
+The metadata is output as .json files, which can be used for various purposes such as live patching and publishing.
+
+By reusing the existing CVE mechanism provided by the Kernel CVE team, this tool enhances the process by adding
+extra metadata fields that help better track the vulnerabilities.
+
+Prerequisites
+
+Before running the script, ensure the following:
+
+	1. Python 3.x is installed.
+	2. Kernel repository is set up, and relevant commits are available.
+	3. vulns.git submodule is initialized: [git submodule update --init --recursive]
+	4. set CVEKERNELTREE (required by vulns.git) 
+
+Usage
+
+The script expects two arguments:
+
+	1. Kernel version: The kernel version (as defined in the Excel sheet’s tab).
+	2. Excel file: The path to the Excel file that contains the commit data.
+
+Command Syntax:
+	Note: You should run the script from the stable kernel root folder.
+        $ cd linux (Stable Kernel source root folder)
+	$ python3 generate_cve.py <KERNEL_VERSION> <EXCEL_FILE_PATH>
+
+	Ex: $ python3 ~/cloudlts/scripts/generate_cve.py v6.6.41 ~/kernel_cve_data.xlsx
+
+This command will process the data from the v6.6.41 tab of kernel_cve_data.xlsx and generate .json/.mbox
+files in ~/cloudlts/cve/v6.6.41.
+
+Excel Sheet Structure
+
+Each tab in the Excel sheet should represent a different kernel version (e.g., v6.6.41). The following columns
+must be present in the sheet:
+
+| Column                     | Description                                                                   |
+|----------------------------|-------------------------------------------------------------------------------|
+| Patch commit               | The SHA or URL of the patch commit                                            |
+| Title                      | A short description of the patch                                              |
+| Subsystem / Driver / Feature| Affected part of the kernel (e.g., Memory Management, Network)               |
+| Remote/local               | Whether the issue is remote or local                                          |
+| DoS/corrupt                | Impact of the issue (DoS, Corruption)                                         |
+| Bug class                  | Class of the bug (Use-After-Free, Race Condition)                             |
+| Exploitation               | Description of how the vulnerability can be exploited                         |
+| Privileges required        | Privilege level required (None, User, Admin)                                  |
+| Known exploit              | Whether a known exploit exists (Yes/No)                                       |
+| Severity                   | Severity level (High, Medium, Low)                                            |
+| Livepatchable              | Can this be patched live (Yes/No)                                             |
+| Included                   | Whether the patch is already included in the product                          |
+| Notes                      | Any additional notes or comments                                              |
+
+
+Script Workflow
+
+	1. Input: The script reads the kernel version and Excel file as input.
+	2. Metadata extraction: For each commit in the Excel sheet, the script extracts the necessary details.
+	3. CVE Search: The script runs the cve_search tool to check if the commit already has a CVE number assigned.
+	4. .json/.mbox file creation: The script generates a .json file for each commit, containing metadata like
+	   commit hash, CVE number, and other relevant details.
+	5. Output: The .json files are saved in the cve/<KERNEL_VERSION>/ directory relative to the lts directory.
+
+Example JSON Output
+
+Here’s an example of the generated .json file:
+
+{
+    "cve_number": "CVE-2024-35889",
+    "patch_commit": "dd19e827d63ac60debf117676d1126bff884bdb8",
+    "title": "Resolve memory fragmentation issue",
+    "subsystem": "Memory Allocator",
+    "remote_local": "Local",
+    "impact": "Corruption",
+    "bug_class": "Memory Fragmentation",
+    "exploitation": "Fragmentation due to unaligned access",
+    "privilege_required": "User",
+    "known_exploit": "No",
+    "severity": "Medium",
+    "live_patchable": "Yes",
+    "included": "Yes",
+    "notes": "Performance regression found"
+}
+
+Contact
+
+If you have any questions or encounter any issues while using this script, feel free to reach out to [Allen Pais] at [apais@microsoft.com].
