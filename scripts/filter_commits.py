@@ -1,6 +1,6 @@
 """ Todo: add documentation
     To Execute:
-        python filter_commits.py --sources sources.txt --range v6.6.10..v6.6.11 --output-dir ./results"""
+       python filter_commits.py --sources sources.txt --range v6.6.10..v6.6.11 --output-dir ./results"""
 
 import subprocess
 import argparse
@@ -8,15 +8,15 @@ import os
 
 def get_commits_between_tags(tag_range: str) -> str:
     """
-    Get the commits between the specified tags using git log.
+    Get the commits between the specified tags using git log, excluding merge commits.
     Returns the output of `git log`.
     """
-    cmd = ['git', 'log', '--name-only', '--pretty=format:%H %s', tag_range]
+    cmd = ['git', 'log', '--no-merges', '--name-only', '--pretty=format:%H %s', tag_range]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    
+
     if result.returncode != 0:
         raise Exception(f"Error getting commits: {result.stderr}")
-    
+
     return result.stdout
 
 def filter_commits_by_sources(commits: str, sources: set) -> tuple[list[str], list[str]]:
@@ -29,12 +29,12 @@ def filter_commits_by_sources(commits: str, sources: set) -> tuple[list[str], li
     non_matching_commits = []
 
     commit_lines = commits.split('\n\n')
-    
+
     for commit_block in commit_lines:
         lines = commit_block.strip().splitlines()
         if not lines:
             continue
-        
+
         commit_header = lines[0]  # First line is the commit hash and message
         changed_files = lines[1:]  # Remaining lines are file paths
 
